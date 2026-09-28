@@ -2,7 +2,7 @@ from pathlib import Path
 import requests
 import json
 
-URL = "https://api.tvmaze.com/shows?page=0"
+SOURCE_URL = "https://api.tvmaze.com/shows?page=0"
 OutputFile = Path("summary.json")
 
 def fetch_data(url):
@@ -87,17 +87,19 @@ def avg_rating_per_language(records):
 
 def  shows_per_decade(records):
     """Counts the number of shows per decade and their IDs."""
-    # 
+    # this grouping uses a dictionary with tuples as values,
+    # where each tuple contains the count of shows and a list of their IDs for that decade.
+    #this values belongs togather in a tuple, as they are related and should be accessed together when analyzing the data.
     summary = {}
     for record in records:
         year = record["premiered"]
         if year:
-            decade = year[:3] + "0s"
+            decade = year[:3] + "0s" # turning 2015 -> 2010s, 1999 -> 1990s
 
-            count,ids = summary.get(decade, (0, []))
-            summary[decade] = (count + 1, (ids + [record["id"]])[:5])
+            count,ids = summary.get(decade, (0, [])) # retrive the current value otherwise default to (0,[])
+            summary[decade] = (count + 1, (ids + [record["id"]])[:5]) # first 5 ids are stored for readability
 
-    return summary
+    return summary # function returns {'2010s': (20, ['id1', 'id2', 'id3', 'id4', 'id5']), '1990s': (15, ['id6', 'id7', 'id8', 'id9', 'id10']), ...}
 
 
 
@@ -112,6 +114,8 @@ def avg_rating_per_year(records):
 def build_summary(records):
     """Builds a summary of the given records, including shows per genre, average rating per language, and shows per decade."""
     summary = {
+        "source_url": SOURCE_URL,
+        "records_processed": len(records),
         "shows_per_genre": shows_per_genre(records),
         "avg_rating_per_language": avg_rating_per_language(records),
         "shows_per_decade": shows_per_decade(records)   
@@ -123,19 +127,17 @@ def build_summary(records):
 
 def write_summary(summary, output_file):
     """Writes the summary to the specified output file in JSON format."""
+    output_file.write_text(json.dumps(summary, indent=2), encoding="utf-8") # write the summary to the output file in JSON format with indentation for readability
 
 
 
 
 def main():
     """Main function to fetch data,run aggerigation and build summary."""
-    raw_records = fetch_data(URL)[:50] # fetch data from the URL and limit to first 50 records
+    raw_records = fetch_data(SOURCE_URL)[:100] # fetch data from the URL and limit to first 50 records
     cleaned_records = [required_records(r) for r in raw_records] # using list comprehension to make a list of filtered records 
     summary = build_summary(cleaned_records)
     write_summary(summary, OutputFile)
-    #print(cleaned_records)
-    summary =shows_per_decade(cleaned_records)
-    print(summary)
 
 
 
