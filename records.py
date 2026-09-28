@@ -44,18 +44,60 @@ def required_records(records):
 def shows_per_genre(records):
     """Counts the number of shows per genre from the given records."""
 
+    # dictonary is used for grouping as
+    # It is easy to read, easy to update, and lets me access each genre’s count directly by key.
+
+    summary = {}
+    for record in records:
+        for genere in record["genres"]:
+            summary[genere] = summary.get(genere, 0) + 1 
+
+    return summary  # function returns {'Drama': 20, 'Comedy': 15, 'Action': 10, ...}
+
+
 
 
 
 def avg_rating_per_language(records):
     """Calculates the average rating per language from the given records."""
 
+    # used two dictionaries, one to store addition of ratings per language and another to store the count of shows per language. 
+    # this allows me to calculate average rating for each language, by doing summation of ratings / no of shows for that language.
+    
+    total_language_rating = {}
+    show_count_per_language = {}
+
+    for record in records:
+        lang = record["language"]
+        rating = record["rating"]
+
+        if lang and rating is not None:  # only consider shows with a valid rating and language
+            total_language_rating[lang] = total_language_rating.get(lang, 0) + rating
+            show_count_per_language[lang] = show_count_per_language.get(lang, 0) + 1
+
+    # Calculate the average rating for each language
+    averages = {
+        lang: round(total_language_rating[lang] / show_count_per_language[lang], 1) # rounding to 1 decimal place to keep the output concise and readable
+        for lang in total_language_rating
+    }
+
+    return averages # function returns {'English': 7.5, 'Spanish': 6.8, 'French': 7.2, ...}
 
 
 
 def  shows_per_decade(records):
-    """Counts the number of shows per decade from the given records."""
+    """Counts the number of shows per decade and their IDs."""
+    # 
+    summary = {}
+    for record in records:
+        year = record["premiered"]
+        if year:
+            decade = year[:3] + "0s"
 
+            count,ids = summary.get(decade, (0, []))
+            summary[decade] = (count + 1, (ids + [record["id"]])[:5])
+
+    return summary
 
 
 
@@ -70,7 +112,9 @@ def avg_rating_per_year(records):
 def build_summary(records):
     """Builds a summary of the given records, including shows per genre, average rating per language, and shows per decade."""
     summary = {
-        
+        "shows_per_genre": shows_per_genre(records),
+        "avg_rating_per_language": avg_rating_per_language(records),
+        "shows_per_decade": shows_per_decade(records)   
     }
     return summary
 
@@ -89,8 +133,9 @@ def main():
     cleaned_records = [required_records(r) for r in raw_records] # using list comprehension to make a list of filtered records 
     summary = build_summary(cleaned_records)
     write_summary(summary, OutputFile)
-
-
+    #print(cleaned_records)
+    summary =shows_per_decade(cleaned_records)
+    print(summary)
 
 
 
