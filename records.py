@@ -30,6 +30,13 @@ def fetch_data(url):
 
 def required_records(records):
     """Filters the records by key fields to include only those which is required for aggregation."""
+    return {
+        "id": records.get("id"),
+        "language": records.get("language"),
+        "genres": (records.get("genres") or []),                                        #handels null values, if get() returns none, it will be replaced by an empty list to prevent errors during iteration
+        "rating": (records.get("rating") or {}).get("average"),                         # if rating missing/null, it will be replaced by an empty dict to prevent errors when trying to access the "average" key
+        "premiered": records.get("premiered")[:4] if records.get("premiered") else None # accesing only the year part,if the value is missing/null, it will be replaced by None to prevent errors when trying to slice a NoneType object
+    }
 
 
 
@@ -63,6 +70,7 @@ def avg_rating_per_year(records):
 def build_summary(records):
     """Builds a summary of the given records, including shows per genre, average rating per language, and shows per decade."""
     summary = {
+        
     }
     return summary
 
@@ -77,10 +85,11 @@ def write_summary(summary, output_file):
 
 def main():
     """Main function to fetch data,run aggerigation and build summary."""
-    raw_records = fetch_data(URL)
+    raw_records = fetch_data(URL)[:50] # fetch data from the URL and limit to first 50 records
     cleaned_records = [required_records(r) for r in raw_records] # using list comprehension to make a list of filtered records 
     summary = build_summary(cleaned_records)
     write_summary(summary, OutputFile)
+
 
 
 
