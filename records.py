@@ -64,22 +64,20 @@ def avg_rating_per_language(records):
     # used two dictionaries, one to store addition of ratings per language and another to store the count of shows per language. 
     # this allows me to calculate average rating for each language, by doing summation of ratings / no of shows for that language.
     
-    total_language_rating = {}
-    show_count_per_language = {}
+    total = {}  # sum of ratings per language
+    count = {}  # total number of shows per language
 
     for record in records:
         lang = record["language"]
         rating = record["rating"]
 
         if lang and rating is not None:  # only consider shows with a valid rating and language
-            total_language_rating[lang] = total_language_rating.get(lang, 0) + rating
-            show_count_per_language[lang] = show_count_per_language.get(lang, 0) + 1
+            total[lang] = total.get(lang, 0) + rating
+            count[lang] = count.get(lang, 0) + 1
 
     # Calculate the average rating for each language
-    averages = {
-        lang: round(total_language_rating[lang] / show_count_per_language[lang], 1) # rounding to 1 decimal place to keep the output concise and readable
-        for lang in total_language_rating
-    }
+    
+    averages = {lang: round(total[lang] / count[lang], 1) for lang in total} # Dictonary comprehension used and rounding to 1 decimal place to keep the output concise and readable
 
     return averages # function returns {'English': 7.5, 'Spanish': 6.8, 'French': 7.2, ...}
 
@@ -134,7 +132,7 @@ def write_summary(summary, output_file):
 
 def main():
     """Main function to fetch data,run aggerigation and build summary."""
-    raw_records = fetch_data(SOURCE_URL)[:100] # fetch data from the URL and limit to first 50 records
+    raw_records = fetch_data(SOURCE_URL)[:100] # fetch data from the URL and limit to first 100 records
     cleaned_records = [required_records(r) for r in raw_records] # using list comprehension to make a list of filtered records 
     summary = build_summary(cleaned_records)
     write_summary(summary, OutputFile)
@@ -145,4 +143,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
